@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# TODO: roem ongedaan maken
+# TODO: punten ongedaan maken
+
+# used commands:
+export SQLITE=`type -p sqlite3`
+export DBFILE=.jash.db
+export RM=`type -p rm`
+export CAT=`type -p cat`
+
+export PATH=''
+export PS1='\u@\h [JAS]$ '
+
+function n () {
+	echo -n 'Begin nieuwe hand... '
+	$SQLITE $DBFILE <<-EOF
+		INSERT INTO hand (hun_roem, hun_punten, onze_punten, onze_roem)
+		VALUES (0, 0, 0, 0);
+	EOF
+	echo '[OK]'
+}
+
+function l () {
+	echo
+	echo '        hun     hun     | onze    onze'
+	echo 'hand    roem    punten  | punten  roem'
+	echo '----------------------------------------'
+	$SQLITE $DBFILE <<-EOF
+		SELECT
+			id || ':	' || hun_roem || '	' || hun_punten || '	| '
+			|| onze_punten || '	  ' || onze_roem AS score
+		FROM hand
+		ORDER BY id;
+	EOF
+	echo '----------------------------------------'
+	$SQLITE $DBFILE <<-EOF
+		SELECT
+			'	' || SUM(hun_roem) || '	' || SUM(hun_punten) || '	| '
+			|| SUM(onze_punten) || '	  ' || SUM(onze_roem) AS score
+		FROM hand
+		ORDER BY id;
+	EOF
+	echo
+}
+
+function roem () {
+	if test $1 = 'h'
+	then wiens='hun'
+	else wiens='onze'
+	fi
+
+	echo -n "$wiens roem += $2... "
+	$SQLITE $DBFILE <<-EOF
+		UPDATE hand
+		SET ${wiens}_roem = ${wiens}_roem + $2
+		WHERE rowid=(SELECT MAX(ROWID) FROM hand);
+	EOF
+	echo '[OK]'
+}
+
+function p () {
+	echo -n '20 roem voor ons... '
+	$SQLITE $DBFILE <<-EOF
+		UPDATE hand
+		SET hun_punten = $((162-$1)), onze_punten = $1
+		WHERE rowid=(select max(rowid) from hand);
+	EOF
+	echo '[OK]'
+	n # begin een nieuwe hand
+}
+
+function q () {
+	$RM $DBFILE
+	exit
+}
+
+# initialization
+if test -e $DBFILE; then $RM $DBFILE; fi
+$SQLITE $DBFILE <<-EOF
+	CREATE TABLE hand (
+			id          INTEGER PRIMARY KEY,
+			hun_roem    INTEGER DEFAULT 0,
+			hun_punten  INTEGER DEFAULT 0,
+			onze_punten INTEGER DEFAULT 0,
+			onze_roem   INTEGER DEFAULT 0
+			);
+	EOF
+n
+
+bind -x '"l":l'
+bind -x '"z":"roem h 100"'
+bind -x '"x":"roem o 100"'
+bind -x '"c":"roem h 50"'
+bind -x '"v":"roem o 50"'
+bind -x '"u":"roem h 20"'
+bind -x '"i":"roem o 20"'
+bind -x '"q":q'
+
