@@ -1,7 +1,5 @@
 #!/bin/bash
 
-# TODO: natjes
-
 # used commands:
 export SQLITE=`type -p sqlite3`
 export DBFILE=.jash.db
@@ -88,34 +86,62 @@ function roem () {
 	echo '[OK]'
 }
 
-function p () {
-	echo -n '$1 punten voor ons... '
+function punten () {
+	if test $1
+	then PUNTEN=$1
+	else read -p 'onze punten: ' PUNTEN
+	fi
+
+	echo -n "$PUNTEN punten voor ons... "
 	$SQLITE $DBFILE <<-EOF
 		UPDATE hand
-		SET hun_punten = $((162-$1)), onze_punten = $1
+		SET hun_punten = $((162-$PUNTEN)), onze_punten = $PUNTEN
 		WHERE rowid=(select max(rowid) from hand);
 	EOF
 	echo '[OK]'
-	n # begin een nieuwe hand
 }
+
+function nat () {
+	if test $1 = 'h'
+	then wie='zij'; wiens='hun';  anders='onze'
+	else wie='wij'; wiens='onze'; anders='hun'
+	fi
+
+	echo -n "$wie nat... "
+	$SQLITE $DBFILE <<-EOF
+		UPDATE hand
+		SET ${anders}_roem = ${anders}_roem + ${wiens}_roem,
+			${wiens}_roem = 0,
+			${anders}_punten = 162
+		WHERE rowid=(SELECT MAX(ROWID) FROM hand);
+	EOF
+	echo '[OK]'
+}
+
+# punten zijn bash commands
+for ((i=0; i<163; i++))
+do alias $i="punten $i"
+done
 
 # initialization
 N
 n
 
-bind -x '"N":N'
-bind -x '"d":d'
-bind -x '"l":l'
-bind -x '"z":"roem h 100"'
-bind -x '"x":"roem o 100"'
-bind -x '"c":"roem h 50"'
-bind -x '"v":"roem o 50"'
-bind -x '"u":"roem h 20"'
-bind -x '"i":"roem o 20"'
-bind -x '"Z":"roem h -100"'
-bind -x '"X":"roem o -100"'
-bind -x '"C":"roem h -50"'
-bind -x '"V":"roem o -50"'
-bind -x '"U":"roem h -20"'
-bind -x '"I":"roem o -20"'
+bind -x '"N":N'           # nieuw spel
+bind -x '"d":d'           # verwijder hand
+bind -x '"l":l'           # laat score zien
+bind -x '"z":roem h 100'  # voeg roem toe
+bind -x '"x":roem o 100'
+bind -x '"c":roem h 50'
+bind -x '"v":roem o 50'
+bind -x '"u":roem h 20'
+bind -x '"i":roem o 20'
+bind -x '"Z":roem h -100' # haal roem eraf
+bind -x '"X":roem o -100'
+bind -x '"C":roem h -50'
+bind -x '"V":roem o -50'
+bind -x '"U":roem h -20'
+bind -x '"I":roem o -20'
+bind -x '"<":nat o; n'    # wij zijn nat
+bind -x '">":nat h; n'    # zij zijn nat
 
