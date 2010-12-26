@@ -7,7 +7,7 @@ export RM=`type -p rm`
 export CAT=`type -p cat`
 
 export PATH=''
-export PS1='\u@\h [JAS]$ '
+export PS1='[JAS] '
 
 function nieuw_spel () {
 	echo -n 'Begin nieuw spel... '
@@ -69,6 +69,13 @@ function list () {
 		SELECT
 			'	' || SUM(hun_roem) || '	' || SUM(hun_punten) || '	| '
 			|| SUM(onze_punten) || '	  ' || SUM(onze_roem) AS score
+		FROM hand
+		ORDER BY id;
+	EOF
+	$SQLITE $DBFILE <<-EOF
+		SELECT
+			'		' || (SUM(hun_roem) + SUM(hun_punten)) || '	| '
+			|| (SUM(onze_punten) + SUM(onze_roem)) AS score
 		FROM hand
 		ORDER BY id;
 	EOF
