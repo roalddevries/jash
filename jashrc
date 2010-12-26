@@ -9,7 +9,7 @@ export CAT=`type -p cat`
 export PATH=''
 export PS1='\u@\h [JAS]$ '
 
-function N () {
+function nieuw_spel () {
 	echo -n 'Begin nieuw spel... '
 	if test -e $DBFILE; then $RM $DBFILE; fi
 	$SQLITE $DBFILE <<-EOF
@@ -24,7 +24,7 @@ function N () {
 	echo '[OK]'
 }
 
-function n () {
+function nieuwe_hand () {
 	echo -n 'Begin nieuwe hand... '
 	$SQLITE $DBFILE <<-EOF
 		INSERT INTO hand (hun_roem, hun_punten, onze_punten, onze_roem)
@@ -33,13 +33,17 @@ function n () {
 	echo '[OK]'
 }
 
-function d () {
+function delete () {
 	echo -n 'Verwijder deze hand...'
 	$SQLITE $DBFILE <<-EOF
 		DELETE FROM hand
 		WHERE rowid=(SELECT MAX(ROWID) FROM hand);
 	EOF
-	echo -n ' en reset de vorige... '
+	echo '[OK]'
+}
+
+function reset () {
+	echo -n 'reset deze hand... '
 	$SQLITE $DBFILE <<-EOF
 		UPDATE hand
 		SET hun_roem = 0, hun_punten = 0, onze_punten = 0, onze_roem = 0
@@ -48,7 +52,7 @@ function d () {
 	echo '[OK]'
 }
 
-function l () {
+function list () {
 	echo
 	echo '        hun     hun     | onze    onze'
 	echo 'hand    roem    punten  | punten  roem'
@@ -120,28 +124,29 @@ function nat () {
 
 # punten zijn bash commands
 for ((i=0; i<163; i++))
-do alias $i="punten $i"
+do alias $i="punten $i; nieuwe_hand"
 done
 
 # initialization
-N
-n
+nieuw_spel
+nieuwe_hand
 
-bind -x '"N":N'           # nieuw spel
-bind -x '"d":d'           # verwijder hand
-bind -x '"l":l'           # laat score zien
-bind -x '"z":roem h 100'  # voeg roem toe
+bind -x '"N":nieuw_spel'         # nieuw spel
+bind -x '"n":nieuwe_hand'        # nieuw spel
+bind -x '"d":delete; reset'      # verwijder hand
+bind -x '"l":list'               # laat score zien
+bind -x '"z":roem h 100'         # voeg roem toe
 bind -x '"x":roem o 100'
 bind -x '"c":roem h 50'
 bind -x '"v":roem o 50'
 bind -x '"u":roem h 20'
 bind -x '"i":roem o 20'
-bind -x '"Z":roem h -100' # haal roem eraf
+bind -x '"Z":roem h -100'        # haal roem eraf
 bind -x '"X":roem o -100'
 bind -x '"C":roem h -50'
 bind -x '"V":roem o -50'
 bind -x '"U":roem h -20'
 bind -x '"I":roem o -20'
-bind -x '"<":nat o; n'    # wij zijn nat
-bind -x '">":nat h; n'    # zij zijn nat
+bind -x '"<":nat o; nieuwe_hand' # wij zijn nat
+bind -x '">":nat h; nieuwe_hand' # zij zijn nat
 
