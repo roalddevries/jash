@@ -148,5 +148,7 @@ bind -x '"V":roem o -50'
 bind -x '"U":roem h -20'
 bind -x '"I":roem o -20'
 bind -x '"<":nat o; nieuwe_hand' # wij zijn nat
+bind -x '")":nat h; nieuwe_hand' # zij zijn nat
+bind -x '"(":nat o; nieuwe_hand' # wij zijn nat
 bind -x '">":nat h; nieuwe_hand' # zij zijn nat
 
