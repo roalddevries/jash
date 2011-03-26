@@ -1,13 +1,17 @@
 #!/bin/bash
 
+# standard environment variables
+export PATH=''
+export PS1='[JAS] '
+export HISTFILE='~/.jash_history'
+
+# TODO: 1 database per sessie, met reconnecten (dus niet verwijderen)
+
 # used commands:
 export SQLITE=`type -p sqlite3`
 export DBFILE=.jash.db
 export RM=`type -p rm`
 export CAT=`type -p cat`
-
-export PATH=''
-export PS1='[JAS] '
 
 function nieuw_spel () {
 	echo -n 'Begin nieuw spel... '
